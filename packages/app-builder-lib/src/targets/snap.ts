@@ -124,7 +124,6 @@ export default class SnapTarget extends Target {
       const archTriplet = archNameToTriplet(arch)
       appDescriptor.environment = {
         DISABLE_WAYLAND: options.allowNativeWayland ? "" : "1",
-        TMPDIR: "$XDG_RUNTIME_DIR",
         PATH: "$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH",
         SNAP_DESKTOP_RUNTIME: "$SNAP/gnome-platform",
         LD_LIBRARY_PATH: [
@@ -175,9 +174,6 @@ export default class SnapTarget extends Target {
     })
 
     const snap = await this.createDescriptor(arch)
-    if (this.isUseTemplateApp) {
-      delete snap.parts
-    }
 
     const stageDir = await createStageDirPath(this, packager, arch)
     const snapArch = toLinuxArchString(arch, "snap")
@@ -212,6 +208,17 @@ export default class SnapTarget extends Target {
 
     if (packager.packagerOptions.effectiveOptionComputed != null && (await packager.packagerOptions.effectiveOptionComputed({ snap, desktopFile, args }))) {
       return
+    }
+
+    if (this.isUseTemplateApp) {
+      // remove fields that are valid in snapcraft.yaml, but not snap.yaml
+      delete snap.compression
+      delete snap.contact
+      delete snap.donation
+      delete snap.issues
+      delete snap.parts
+      delete snap['source-code']
+      delete snap.website
     }
 
     await outputFile(path.join(snapMetaDir, this.isUseTemplateApp ? "snap.yaml" : "snapcraft.yaml"), serializeToYaml(snap))
