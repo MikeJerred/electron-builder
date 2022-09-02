@@ -216,7 +216,6 @@ export default class SnapTarget extends Target {
       delete snap.contact
       delete snap.donation
       delete snap.issues
-      delete snap.parts
       delete snap["source-code"]
       delete snap.website
     }
