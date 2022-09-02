@@ -175,6 +175,10 @@ export default class SnapTarget extends Target {
 
     const snap = await this.createDescriptor(arch)
 
+    if (this.isUseTemplateApp) {
+      delete snap.parts
+    }
+
     const stageDir = await createStageDirPath(this, packager, arch)
     const snapArch = toLinuxArchString(arch, "snap")
     const args = ["snap", "--app", appOutDir, "--stage", stageDir, "--arch", snapArch, "--output", artifactPath, "--executable", this.packager.executableName]
@@ -206,10 +210,6 @@ export default class SnapTarget extends Target {
       args.push("--compression", snap.compression)
     }
 
-    if (packager.packagerOptions.effectiveOptionComputed != null && (await packager.packagerOptions.effectiveOptionComputed({ snap, desktopFile, args }))) {
-      return
-    }
-
     if (this.isUseTemplateApp) {
       // remove fields that are valid in snapcraft.yaml, but not snap.yaml
       delete snap.compression
@@ -217,8 +217,12 @@ export default class SnapTarget extends Target {
       delete snap.donation
       delete snap.issues
       delete snap.parts
-      delete snap['source-code']
+      delete snap["source-code"]
       delete snap.website
+    }
+
+    if (packager.packagerOptions.effectiveOptionComputed != null && (await packager.packagerOptions.effectiveOptionComputed({ snap, desktopFile, args }))) {
+      return
     }
 
     await outputFile(path.join(snapMetaDir, this.isUseTemplateApp ? "snap.yaml" : "snapcraft.yaml"), serializeToYaml(snap))
